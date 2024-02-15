@@ -25,7 +25,7 @@ namespace Server
 
         public async Task Start(string[] args)
         {
-            _server = new TcpListener(IPAddress.Any, 25565);
+            _server = new TcpListener(IPAddress.Any, 80);
             _server.Start();
             Console.WriteLine("Server has started");
             await AcceptClients();
