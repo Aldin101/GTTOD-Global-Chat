@@ -147,18 +147,14 @@ namespace Client
             fontStream.Read(fontData, 0, (int)fontStream.Length);
             fontStream.Close();
 
-            // Create a temporary file to hold the font data
             string tempFontPath = Path.Combine(Application.temporaryCachePath, "ChakraPetch-Regular.ttf");
             File.WriteAllBytes(tempFontPath, fontData);
 
-            // Load the font from the temporary file
             font = Font.CreateDynamicFontFromOSFont(tempFontPath, 14);
 
-            // Delete the temporary file
             File.Delete(tempFontPath);
 
 
-            // Create the chat box
             GameObject chatbox = new GameObject("Chatbox");
             chatbox.AddComponent<Canvas>();
             chatbox.AddComponent<UnityEngine.UI.CanvasScaler>();
@@ -167,59 +163,52 @@ namespace Client
             chatbox.transform.localPosition = new Vector3(1, 1, 1);
             chatbox.layer = LayerMask.NameToLayer("UI");
 
-            // Create a panel as a child of the chat box
             GameObject panel = new GameObject("Panel");
             panel.transform.SetParent(chatbox.transform);
             panel.layer = LayerMask.NameToLayer("UI");
             UnityEngine.UI.Image panelImage = panel.AddComponent<UnityEngine.UI.Image>();
-            panelImage.color = new Color(0, 0, 0, 0.9f); // Set the color to black with 50% transparency
+            panelImage.color = new Color(0, 0, 0, 0.9f);
 
             GameObject newLineBacking = new GameObject("NewLineBacking");
             newLineBacking.transform.SetParent(panel.transform);
             newLineBacking.layer = LayerMask.NameToLayer("UI");
             UnityEngine.UI.Image newLineBackingImage = newLineBacking.AddComponent<UnityEngine.UI.Image>();
-            newLineBackingImage.color = new Color(0, 0, 0, 0.9f); // Set the color to black with 50% transparency
+            newLineBackingImage.color = new Color(0, 0, 0, 0.9f);
 
-            // Create a text component as a child of the panel for chat messages
             GameObject textObject = new GameObject("Text");
             textObject.transform.SetParent(panel.transform);
             textObject.layer = LayerMask.NameToLayer("UI");
             UnityEngine.UI.Text textComponent = textObject.AddComponent<UnityEngine.UI.Text>();
-            textComponent.text = ""; // Initialize the text component with an empty string
+            textComponent.text = "";
             textComponent.font = font;
             textComponent.fontSize = 80;
             textComponent.alignment = TextAnchor.LowerLeft;
             textComponent.verticalOverflow = VerticalWrapMode.Overflow;
             textComponent.horizontalOverflow = HorizontalWrapMode.Overflow;
 
-            // Create an input field as a child of the panel for text entry
             GameObject inputFieldObject = new GameObject("InputField");
             inputFieldObject.transform.SetParent(panel.transform);
             inputFieldObject.layer = LayerMask.NameToLayer("UI");
             UnityEngine.UI.InputField inputField = inputFieldObject.AddComponent<UnityEngine.UI.InputField>();
 
-            // Create a Text object for the input field's text
             GameObject inputFieldTextObject = new GameObject("Text");
             inputFieldTextObject.transform.SetParent(inputFieldObject.transform);
             UnityEngine.UI.Text inputFieldText = inputFieldTextObject.AddComponent<UnityEngine.UI.Text>();
             inputField.textComponent = inputFieldText;
 
-            // Set the color and font of the input field's text
-            inputFieldText.color = Color.white; // Set the text color to white
+            inputFieldText.color = Color.white;
             inputFieldText.font = font;
             inputFieldText.fontSize = 80;
             inputFieldText.verticalOverflow = VerticalWrapMode.Overflow;
             inputFieldText.horizontalOverflow = HorizontalWrapMode.Overflow;
 
-            // Create a Text object for the input field's placeholder text
             GameObject placeholderTextObject = new GameObject("Placeholder");
             placeholderTextObject.transform.SetParent(inputFieldObject.transform);
             UnityEngine.UI.Text placeholderText = placeholderTextObject.AddComponent<UnityEngine.UI.Text>();
             inputField.placeholder = placeholderText;
 
-            // Set the color and font of the input field's placeholder text
             placeholderText.text = "Press / to start typing...";
-            placeholderText.color = Color.gray; // Set the placeholder text color to gray
+            placeholderText.color = Color.gray;
             placeholderText.font = font;
             placeholderText.fontSize = 80;
             placeholderText.verticalOverflow = VerticalWrapMode.Overflow;
@@ -332,13 +321,11 @@ namespace Client
 
                 if (lineWidth > maxLineWidth)
                 {
-                    // Check if the word itself is longer than maxLineWidth
                     textGenerator.Populate(word, settings);
                     var wordWidth = textGenerator.GetPreferredWidth(word, settings);
 
                     if (wordWidth > maxLineWidth)
                     {
-                        // If the word is longer than maxLineWidth, split it
                         var splitWord = SplitWord(word, maxLineWidth, font, fontSize);
                         lines.AddRange(splitWord);
                     }
@@ -446,7 +433,6 @@ namespace Client
             }
 
 
-            // If the backspace key is pressed, remove the last character from the placeholder text
             if (Input.GetKeyDown(KeyCode.Backspace))
             {
                 placeholderText.GetComponent<UnityEngine.UI.Text>().text = placeholderText.GetComponent<UnityEngine.UI.Text>().text.Replace(" |", "");
@@ -467,7 +453,6 @@ namespace Client
                     {
                         string keyString = keyCode.ToString();
 
-                        // Convert KeyCode to actual string
                         if (keyString.StartsWith("Alpha"))
                         {
                             keyString = keyString.Substring(5);
@@ -482,7 +467,6 @@ namespace Client
                         }
                         else if (keyString.Length > 1)
                         {
-                            // Handle special keys
                             switch (keyString)
                             {
                                 case "Period":
@@ -517,7 +501,6 @@ namespace Client
                                     keyString = "'";
                                     break;
                                 default:
-                                    // Ignore other non-character keys
                                     continue;
                             }
                         }
@@ -526,7 +509,6 @@ namespace Client
                         {
                             keyString = keyString.ToUpper();
 
-                            // Handle shift-modified keys
                             switch (keyString)
                             {
                                 case ".":
@@ -560,7 +542,6 @@ namespace Client
                             keyString = keyString.ToLower();
                         }
 
-                        // Add the key to the placeholder text
                         placeholderText.GetComponent<UnityEngine.UI.Text>().text = placeholderText.GetComponent<UnityEngine.UI.Text>().text.Replace(" |", "");
 
                         string newText = placeholderText.GetComponent<UnityEngine.UI.Text>().text + keyString;

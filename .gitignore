@@ -6,3 +6,7 @@
 */GTTODChat Installer/bin
 */GTTODChat Installer/obj
 */GTTODChat Installer/packages
+
+GTTODChat Server/Server/bin
+GTTODChat Server/Server/obj
+GTTODChat Server/Server/packages
