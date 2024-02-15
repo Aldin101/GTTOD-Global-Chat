@@ -29,7 +29,6 @@ namespace Server
             server.Start();
             Console.WriteLine("Server has started");
             acceptClients();
-            receiveMessages();
         }
 
         public async void acceptClients()
@@ -39,59 +38,39 @@ namespace Server
                 TcpClient client = await server.AcceptTcpClientAsync();
                 clients.Add(client);
                 Console.WriteLine("Client has connected");
+
+                receiveMessages(client);
             }
         }
 
-        public async void receiveMessages()
+        public async void receiveMessages(TcpClient client)
         {
             while (true)
             {
+                if (!client.Connected)
+                {
+                    clientsMarkedForDeletion.Add(client);
+                    break;
+                }
+                NetworkStream stream = client.GetStream();
                 try
                 {
-                    foreach (TcpClient client in clients)
-                    {
-                        if (!client.Connected)
-                        {
-                            clientsMarkedForDeletion.Add(client);
-                        }
-                        NetworkStream stream = client.GetStream();
-                        try
-                        {
-                            if (!stream.DataAvailable) continue;
-                            byte[] buffer = new byte[1024];
-                            int bytesRead = stream.Read(buffer, 0, buffer.Length);
-                            string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                    if (!stream.DataAvailable) continue;
+                    byte[] buffer = new byte[1024];
+                    int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
+                    string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
 
-                            sendMessage(message);
-                        }
-                        catch
-                        {
-                            clientsMarkedForDeletion.Add(client);
-                        }
-                    }
-
-                    foreach (TcpClient client in clientsMarkedForDeletion)
-                    {
-                        try
-                        {
-                            client.Close();
-                        } catch
-                        {
-                            Console.WriteLine("Failed to close client connection, deleleting anyway...");
-                        }
-
-                        clients.Remove(client);
-                        Console.WriteLine("Client has disconnected");
-                    }
-
-                    clientsMarkedForDeletion.Clear();
-                } catch (Exception e)
-                {
-                    if (e is ObjectDisposedException || e is InvalidOperationException) continue;
-                    Console.Error.WriteLine(e);
+                    sendMessage(message);
                 }
+                catch
+                {
+                    clientsMarkedForDeletion.Add(client);
+                    break;
+                }
+                Thread.Sleep(100);
             }
         }
+
 
         public void sendMessage(String message)
         {
