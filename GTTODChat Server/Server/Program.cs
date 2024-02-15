@@ -19,7 +19,7 @@ namespace Server
 
     class Program
     {
-        private TcpListener server;
+        private TcpListener server = null!;
         private List<TcpClient> clients = new List<TcpClient>();
         private List<TcpClient> clientsMarkedForDeletion = new List<TcpClient>();
 
@@ -38,7 +38,7 @@ namespace Server
                 TcpClient client = await server.AcceptTcpClientAsync();
                 clients.Add(client);
                 Console.WriteLine("Client has connected");
-                _ = ReceiveMessages(client);
+                Task.Run(() => ReceiveMessages(client));
             }
         }
 
@@ -52,9 +52,9 @@ namespace Server
                     clients.Remove(client);
                     break;
                 }
-                NetworkStream stream = client.GetStream();
                 try
                 {
+                    NetworkStream stream = client.GetStream();
                     if (!stream.DataAvailable) continue;
                     byte[] buffer = new byte[1024];
                     int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
