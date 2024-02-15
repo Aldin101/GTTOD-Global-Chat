@@ -20,8 +20,8 @@ namespace Server
     class Program
     {
         private TcpListener server;
-        private readonly List<TcpClient> clients = new List<TcpClient>();
-        private readonly List<TcpClient> clientsMarkedForDeletion = new List<TcpClient>();
+        private List<TcpClient> clients = new List<TcpClient>();
+        private List<TcpClient> clientsMarkedForDeletion = new List<TcpClient>();
 
         public async Task Start(string[] args)
         {
