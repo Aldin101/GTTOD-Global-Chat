@@ -57,7 +57,7 @@ namespace Server
                     NetworkStream stream = client.GetStream();
                     if (!stream.DataAvailable)
                     {
-                        async Task.Delay(100);
+                        await Task.Delay(100);
                         continue;
                     }
                     byte[] buffer = new byte[1024];
