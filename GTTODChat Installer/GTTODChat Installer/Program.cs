@@ -53,6 +53,15 @@ namespace GTTODChat_Installer
 
             File.Delete(Path.Combine(tempPath, "chat.zip"));
 
+            resourceName = assembly.GetManifestResourceNames().Single(str => str.EndsWith("Gameloop.Vdf.dll"));
+            using (Stream stream = assembly.GetManifestResourceStream(resourceName))
+            {
+                using (var fileStream = File.Create("Gameloop.Vdf.dll"))
+                {
+                    stream.CopyTo(fileStream);
+                }
+            }
+
 
             Text = "GTTOD Global Chat Installer";
             Size = new System.Drawing.Size(240, 200);
