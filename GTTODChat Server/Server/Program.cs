@@ -19,14 +19,14 @@ namespace Server
 
     class Program
     {
-        private TcpListener _server;
-        private readonly List<TcpClient> _clients = new List<TcpClient>();
-        private readonly List<TcpClient> _clientsMarkedForDeletion = new List<TcpClient>();
+        private TcpListener server;
+        private readonly List<TcpClient> clients = new List<TcpClient>();
+        private readonly List<TcpClient> clientsMarkedForDeletion = new List<TcpClient>();
 
         public async Task Start(string[] args)
         {
-            _server = new TcpListener(IPAddress.Any, 80);
-            _server.Start();
+            server = new TcpListener(IPAddress.Any, 80);
+            server.Start();
             Console.WriteLine("Server has started");
             await AcceptClients();
         }
@@ -35,10 +35,9 @@ namespace Server
         {
             while (true)
             {
-                TcpClient client = await _server.AcceptTcpClientAsync();
-                _clients.Add(client);
+                TcpClient client = await server.AcceptTcpClientAsync();
+                clients.Add(client);
                 Console.WriteLine("Client has connected");
-
                 _ = ReceiveMessages(client);
             }
         }
@@ -49,7 +48,8 @@ namespace Server
             {
                 if (!client.Connected)
                 {
-                    _clientsMarkedForDeletion.Add(client);
+                    client.Close();
+                    clients.Remove(client);
                     break;
                 }
                 NetworkStream stream = client.GetStream();
@@ -64,7 +64,15 @@ namespace Server
                 }
                 catch
                 {
-                    _clientsMarkedForDeletion.Add(client);
+                    client.Close();
+                    clients.Remove(client);
+                    break;
+                }
+                if (clientsMarkedForDeletion.Contains(client))
+                {
+                    clientsMarkedForDeletion.Remove(client);
+                    client.Close();
+                    clients.Remove(client);
                     break;
                 }
                 Thread.Sleep(100);
@@ -73,7 +81,7 @@ namespace Server
 
         private void SendMessage(string message)
         {
-            foreach (TcpClient client in _clients)
+            foreach (TcpClient client in clients)
             {
                 try
                 {
@@ -84,7 +92,7 @@ namespace Server
                 }
                 catch
                 {
-                    _clientsMarkedForDeletion.Add(client);
+                    clientsMarkedForDeletion.Add(client);
                 }
             }
         }
