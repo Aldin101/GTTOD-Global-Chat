@@ -55,7 +55,11 @@ namespace Server
                 try
                 {
                     NetworkStream stream = client.GetStream();
-                    if (!stream.DataAvailable) continue;
+                    if (!stream.DataAvailable)
+                    {
+                        async Task.Delay(100);
+                        continue;
+                    }
                     byte[] buffer = new byte[1024];
                     int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
                     string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
@@ -75,7 +79,6 @@ namespace Server
                     clients.Remove(client);
                     break;
                 }
-                Thread.Sleep(100);
             }
         }
 
