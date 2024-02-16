@@ -201,13 +201,13 @@ namespace Client
             panel.transform.SetParent(chatbox.transform);
             panel.layer = LayerMask.NameToLayer("UI");
             UnityEngine.UI.Image panelImage = panel.AddComponent<UnityEngine.UI.Image>();
-            panelImage.color = new Color(0, 0, 0, 0.9f);
+            panelImage.color = new Color(0, 0, 0, 0.9961f);
 
             GameObject newLineBacking = new GameObject("NewLineBacking");
             newLineBacking.transform.SetParent(panel.transform);
             newLineBacking.layer = LayerMask.NameToLayer("UI");
             UnityEngine.UI.Image newLineBackingImage = newLineBacking.AddComponent<UnityEngine.UI.Image>();
-            newLineBackingImage.color = new Color(0, 0, 0, 0.9f);
+            newLineBackingImage.color = new Color(0, 0, 0, 0.9961f);
 
             GameObject textObject = new GameObject("Text");
             textObject.transform.SetParent(panel.transform);
