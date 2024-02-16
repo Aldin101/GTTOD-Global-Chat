@@ -1,15 +1,12 @@
-﻿using Gameloop.Vdf.Linq;
-using Gameloop.Vdf;
-using Microsoft.Win32;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO.Compression;
 using System.Reflection;
+using Microsoft.Win32;
+using Gameloop.Vdf;
+using Gameloop.Vdf.Linq;
 
 namespace GTTODChat_Installer
 {

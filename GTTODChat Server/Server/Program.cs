@@ -23,6 +23,8 @@ namespace Server
         private List<TcpClient> clients = new List<TcpClient>();
         private List<TcpClient> clientsMarkedForDeletion = new List<TcpClient>();
 
+        private string currentVersion = "1.0.0";
+
         public async Task Start(string[] args)
         {
             server = new TcpListener(IPAddress.Any, 80);
@@ -64,7 +66,25 @@ namespace Server
                     int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
                     string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
 
-                    SendMessage(message);
+
+                    List<string> messageParts = new List<string>(message.Split('~'));
+
+                    if (messageParts[0] != currentVersion)
+                    {
+                        string reply = "System: The plugin is outdated, please update";
+                        byte[] replyBuffer = Encoding.UTF8.GetBytes(reply);
+                        stream.Write(replyBuffer, 0, replyBuffer.Length);
+                        stream.Flush();
+                        client.Close();
+                        clients.Remove(client);
+
+                        Console.WriteLine("Client has been disconnected due to outdated plugin");
+
+                        return;
+                    } else
+                    {
+                        SendMessage(messageParts[1]);
+                    }
                 }
                 catch
                 {
@@ -80,6 +100,7 @@ namespace Server
                     break;
                 }
             }
+            Console.WriteLine("Client has disconnected");
         }
 
         private void SendMessage(string message)

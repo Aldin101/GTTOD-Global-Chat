@@ -22,12 +22,13 @@ namespace Client
         private NetworkStream stream;
 
         private GameObject hud;
+        private Material defaultMateral;
 
         private bool textBoxFocused = false;
 
         private Font font;
 
-        private  string username;
+        private string username;
 
         private void Awake()
         {
@@ -86,15 +87,17 @@ namespace Client
                 GameObject GTTOD = GameObject.Find("GTTOD").gameObject;
                 GameObject Player = GameObject.Find("Player").gameObject;
 
-                UnityEngine.UI.InputField inputField = inputFieldObject.GetComponent<UnityEngine.UI.InputField>();
-
-                placeholderText.GetComponent<UnityEngine.UI.Text>().text = " |"; // Clear the placeholder text
+                placeholderText.GetComponent<UnityEngine.UI.Text>().text = " |";
                 placeholderText.GetComponent<UnityEngine.UI.Text>().color = Color.white;
                 Player.gameObject.GetComponent<ac_CharacterController>().ToggleFreezePlayer(false);
                 GTTOD.gameObject.GetComponent<GameManager>().TimeStopped = true;
 
                 textBoxFocused = true;
-            } else if (Input.GetKeyDown(KeyCode.Slash) && textBoxFocused)
+
+                placeholderText.GetComponent<UnityEngine.UI.Text>().material = panel.transform.Find("Text").GetComponent<UnityEngine.UI.Text>().material;
+
+            }
+            else if (Input.GetKeyDown(KeyCode.Slash) && textBoxFocused && !Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift))
             {
                 GameObject panel = chatbox.transform.Find("Panel").gameObject;
                 GameObject inputFieldObject = panel.transform.Find("InputField").gameObject;
@@ -104,20 +107,51 @@ namespace Client
                 GameObject newLineBacking = panel.transform.Find("NewLineBacking").gameObject;
 
                 newLineBacking.SetActive(false);
-                placeholderText.GetComponent<UnityEngine.UI.Text>().text = "Press / to start typing..."; // Restore the placeholder text
+                placeholderText.GetComponent<UnityEngine.UI.Text>().text = "Press / to start typing...";
                 placeholderText.GetComponent<UnityEngine.UI.Text>().color = Color.gray;
                 Player.gameObject.GetComponent<ac_CharacterController>().ToggleFreezePlayer(true);
                 GTTOD.gameObject.GetComponent<GameManager>().TimeStopped = false;
 
                 textBoxFocused = false;
-            } else if (textBoxFocused)
+
+                placeholderText.GetComponent<UnityEngine.UI.Text>().material = defaultMateral;
+            }
+            else if (textBoxFocused)
             {
                 processKeys();
             }
 
             if (connectionAttempted)
             {
-                checkForMessages(chatbox);
+                if (!client.Connected && !connectionFailed)
+                {
+                    connectionFailed = true;
+
+                    string message = "You have been disconnected";
+
+                    message = SplitLine(message, 90, font, 8);
+
+                    GameObject panel = chatbox.transform.Find("Panel").gameObject;
+                    GameObject textObject = panel.transform.Find("Text").gameObject;
+                    string existingText = textObject.transform.GetComponent<UnityEngine.UI.Text>().text;
+
+                    List<string> lines = new List<string>(existingText.Split('\n'));
+                    List<string> messageLines = new List<string>(message.Split('\n'));
+
+                    lines.AddRange(messageLines);
+
+                    if (lines.Count > 10)
+                    {
+                        lines = lines.Skip(lines.Count - 10).ToList();
+                    }
+
+                    string newText = string.Join("\n", lines);
+
+                    textObject.transform.GetComponent<UnityEngine.UI.Text>().text = newText;
+                } else
+                {
+                    checkForMessages(chatbox);
+                }
             }
             else
             {
@@ -131,7 +165,7 @@ namespace Client
                 }
                 else
                 {
-                    byte[] buffer = System.Text.Encoding.UTF8.GetBytes($"{username} connected");
+                    byte[] buffer = System.Text.Encoding.UTF8.GetBytes($"{PluginInfo.PLUGIN_VERSION}~{username} connected");
                     stream.Write(buffer, 0, buffer.Length);
                     stream.FlushAsync();
                 }
@@ -185,6 +219,11 @@ namespace Client
             textComponent.alignment = TextAnchor.LowerLeft;
             textComponent.verticalOverflow = VerticalWrapMode.Overflow;
             textComponent.horizontalOverflow = HorizontalWrapMode.Overflow;
+
+            defaultMateral = textComponent.material;
+
+            textComponent.material = GameObject.Find("PlayerHUD").transform.Find("BigTextGroup").transform.Find("BigText").GetComponent<UnityEngine.UI.Text>().material;
+
 
             GameObject inputFieldObject = new GameObject("InputField");
             inputFieldObject.transform.SetParent(panel.transform);
@@ -419,7 +458,7 @@ namespace Client
                     message = message.Replace(" \n", " ");
                     message = message.Replace("\n", " ");
 
-                    byte[] buffer = System.Text.Encoding.UTF8.GetBytes(message);
+                    byte[] buffer = System.Text.Encoding.UTF8.GetBytes($"{PluginInfo.PLUGIN_VERSION}~{message}");
                     stream.Write(buffer, 0, buffer.Length);
                     stream.FlushAsync();
                 }
@@ -430,6 +469,8 @@ namespace Client
                 GTTOD.gameObject.GetComponent<GameManager>().TimeStopped = false;
                 newLineBacking.SetActive(false);
                 textBoxFocused = false;
+
+                placeholderText.GetComponent<UnityEngine.UI.Text>().material = defaultMateral;
             }
 
 
@@ -442,6 +483,26 @@ namespace Client
                     placeholderText.GetComponent<UnityEngine.UI.Text>().text = currentText.Substring(0, currentText.Length - 1);
 
                     placeholderText.GetComponent<UnityEngine.UI.Text>().text += " |";
+                }
+
+                string[] lines = placeholderText.GetComponent<UnityEngine.UI.Text>().text.Split('\n');
+
+                if (lines.Length < 2)
+                {
+                    newLineBacking.SetActive(false);
+                }
+                else
+                {
+                    newLineBacking.SetActive(true);
+                }
+
+                if (lines.Length < 3)
+                {
+                    newLineBacking.transform.localScale = new Vector3(1, .1f, 1);
+                }
+                else
+                {
+                    newLineBacking.transform.localScale = new Vector3(1, .3f, 1);
                 }
             }
 
@@ -476,14 +537,7 @@ namespace Client
                                     keyString = ",";
                                     break;
                                 case "Slash":
-                                    if (!Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift))
-                                    {
-
-                                    }
-                                    else
-                                    {
-                                        keyString = "/";
-                                    }
+                                    keyString = "/";
                                     break;
                                 case "Backslash":
                                     keyString = "\\";
@@ -535,6 +589,36 @@ namespace Client
                                 case "'":
                                     keyString = "\"";
                                     break;
+                                case "1":
+                                    keyString = "!";
+                                    break;
+                                case "2":
+                                    keyString = "@";
+                                    break;
+                                case "3":
+                                    keyString = "#";
+                                    break;
+                                case "4":
+                                    keyString = "$";
+                                    break;
+                                case "5":
+                                    keyString = "%";
+                                    break;
+                                case "6":
+                                    keyString = "^";
+                                    break;
+                                case "7":
+                                    keyString = "&";
+                                    break;
+                                case "8":
+                                    keyString = "*";
+                                    break;
+                                case "9":
+                                    keyString = "(";
+                                    break;
+                                case "0":
+                                    keyString = ")";
+                                    break;
                             }
                         }
                         else
@@ -560,6 +644,14 @@ namespace Client
                         }
 
                         if (lines.Length < 3)
+                        {
+                            newLineBacking.transform.localScale = new Vector3(1, .1f, 1);
+                        } else
+                        {
+                            newLineBacking.transform.localScale = new Vector3(1, .3f, 1);
+                        }
+
+                        if (lines.Length < 4)
                         {
                             newText += " |";
 
