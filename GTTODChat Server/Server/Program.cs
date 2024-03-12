@@ -89,7 +89,6 @@ namespace Server
                             byte[] replyBuffer = Encoding.UTF8.GetBytes(reply);
                             stream.Write(replyBuffer, 0, replyBuffer.Length);
                             stream.Flush();
-                            client.Close();
                         }
 
                         SendMessage(messageParts[1]);
