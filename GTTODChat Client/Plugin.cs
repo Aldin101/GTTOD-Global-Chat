@@ -116,6 +116,8 @@ namespace Client
             {
                 if (!client.Connected && !connectionFailed)
                 {
+                    if (input.GetComponent<UnityEngine.UI.Text>().text == "Connection lost") return;
+
                     input.GetComponent<UnityEngine.UI.Text>().text = "Connection lost";
                     input.GetComponent<UnityEngine.UI.Text>().material = defaultMateral;
                     input.GetComponent<UnityEngine.UI.Text>().color = Color.gray;
