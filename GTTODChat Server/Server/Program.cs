@@ -69,16 +69,23 @@ namespace Server
 
                     if (messageParts[0] != "1.1.0")
                     {
-                        string reply = "System: The plugin is outdated, please update";
-                        byte[] replyBuffer = Encoding.UTF8.GetBytes(reply);
-                        stream.Write(replyBuffer, 0, replyBuffer.Length);
-                        stream.Flush();
                         if (messageParts[0] == "1.0.0" || messageParts[0] == "1.0.1")
                         {
+                            if (!messageParts[1].Contains(":")
+                            {
+                                string reply = "System: The plugin is outdated, please update\n";
+                                byte[] replyBuffer = Encoding.UTF8.GetBytes(reply);
+                                stream.Write(replyBuffer, 0, replyBuffer.Length);
+                                stream.Flush();
+                            }
                             SendMessage(messageParts[1]);
                         }
                         else
                         {
+                            string reply = "System: The plugin is outdated, please update\n";
+                            byte[] replyBuffer = Encoding.UTF8.GetBytes(reply);
+                            stream.Write(replyBuffer, 0, replyBuffer.Length);
+                            stream.Flush();
                             client.Close();
                             clients.Remove(client);
                             Console.WriteLine("Client has been disconnected due to outdated plugin");
