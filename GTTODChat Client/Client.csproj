@@ -4,13 +4,14 @@
     <TargetFramework>net46</TargetFramework>
     <AssemblyName>GlobalChat</AssemblyName>
     <Description>Feeling nostolgic? This plugin brings back the ingame chat, just like old times!</Description>
-    <Version>1.0.1</Version>
+    <Version>1.1.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="ChakraPetch-Regular.ttf" />
+    <EmbeddedResource Include="chatbox.sprite" />
   </ItemGroup>
 
   <ItemGroup>

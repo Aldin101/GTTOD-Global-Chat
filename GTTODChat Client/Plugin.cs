@@ -1,15 +1,14 @@
 ﻿using System;
-using Microsoft.Win32;
-using UnityEngine;
-using UnityEngine.UI;
-using BepInEx;
 using System.Net.Sockets;
-using UnityEngine.UIElements;
 using System.IO;
 using System.Reflection;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using Microsoft.Win32;
 using System.Linq;
+using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.UIElements;
+using BepInEx;
 
 namespace Client
 {
@@ -21,12 +20,18 @@ namespace Client
         private TcpClient client;
         private NetworkStream stream;
 
-        private GameObject hud;
         private Material defaultMateral;
+
+        private GameObject hud = null;
+        private GameObject chatbox = null;
+        private GameObject input = null;
+        private GameObject messages = null;
 
         private bool textBoxFocused = false;
 
+        private AssetBundle bundle;
         private Font font;
+        private Sprite sprite;
 
         private string username;
 
@@ -43,78 +48,64 @@ namespace Client
             {
                 client.Close();
             }
+            GameObject.Destroy(chatbox);
+            bundle.Unload(true);
         }
 
         private void Update()
         {
-            hud = GameObject.Find("PlayerHUD");
-            if (hud == null) return;
+            if (GameManager.GM == null) return;
+            if (GameManager.GM.gameObject.GetComponent<GTTOD_HUD>().BigTextGroup.transform.parent == null) return;
+            hud = GameManager.GM.gameObject.GetComponent<GTTOD_HUD>().BigTextGroup.transform.parent.gameObject;
 
-            GameObject chatbox = GameObject.Find("Chatbox");
             if (chatbox == null)
             {
                 chatbox = createChatBox();
 
                 chatbox.transform.SetParent(hud.transform);
                 chatbox.transform.localPosition = new Vector3(600, 325, 0);
-                chatbox.transform.localScale = new Vector3(3, 2, 1);
+                chatbox.transform.localScale = new Vector3(1, 1, 1);
                 chatbox.transform.localRotation = Quaternion.Euler(356.5f, 3.5f, 0);
 
-                GameObject panel = chatbox.transform.Find("Panel").gameObject;
+                GameObject panel = chatbox.transform.GetChild(0).gameObject;
                 panel.transform.localPosition = new Vector3(0, 0, 0);
                 panel.transform.localScale = new Vector3(1, 1, 1);
 
-                GameObject newLineBacking = panel.transform.Find("NewLineBacking").gameObject;
-                newLineBacking.transform.localPosition = new Vector3(0, -55, 0);
-                newLineBacking.transform.localScale = new Vector3(1, .1f, 1);
-                newLineBacking.SetActive(false);
+                GameObject textObject = panel.transform.GetChild(0).gameObject;
+                textObject.transform.localPosition = new Vector3(-135, -53, 0);
+                textObject.transform.localScale = new Vector3(.15f, .15f, 1);
 
-                GameObject textObject = panel.transform.Find("Text").gameObject;
-                textObject.transform.localPosition = new Vector3(-44, -34, 0);
-                textObject.transform.localScale = new Vector3(.1f, .1f, 1);
-
-                GameObject inputFieldObject = panel.transform.Find("InputField").gameObject;
-                inputFieldObject.transform.localPosition = new Vector3(-44, -45, 0);
-                inputFieldObject.transform.localScale = new Vector3(.1f, .1f, 1);
+                GameObject inputFieldObject = panel.transform.GetChild(1).gameObject;
+                inputFieldObject.transform.localPosition = new Vector3(-135, -75, 0);
+                inputFieldObject.transform.localScale = new Vector3(.15f, .15f, 1);
             }
 
             if (Input.GetKeyDown(KeyCode.Slash) && !connectionFailed && !textBoxFocused)
             {
-                GameObject panel = chatbox.transform.Find("Panel").gameObject;
-                GameObject inputFieldObject = panel.transform.Find("InputField").gameObject;
-                GameObject placeholderText = inputFieldObject.transform.Find("Placeholder").gameObject;
+                GameObject panel = chatbox.transform.GetChild(0).gameObject;
+                GameObject inputFieldObject = panel.transform.GetChild(1).gameObject;
+                GameObject placeholderText = inputFieldObject.transform.GetChild(2).gameObject;
 
-                GameObject GTTOD = GameObject.Find("GTTOD").gameObject;
-                GameObject Player = GameObject.Find("Player").gameObject;
-
-                placeholderText.GetComponent<UnityEngine.UI.Text>().text = " |";
-                placeholderText.GetComponent<UnityEngine.UI.Text>().color = Color.white;
-                Player.gameObject.GetComponent<ac_CharacterController>().ToggleFreezePlayer(false);
-                GTTOD.gameObject.GetComponent<GameManager>().TimeStopped = true;
+                input.GetComponent<UnityEngine.UI.Text>().text = " |";
+                input.GetComponent<UnityEngine.UI.Text>().color = Color.white;
+                FindAnyObjectByType<ac_CharacterController>().ToggleFreezePlayer(false);
+                GameManager.GM.TimeStopped = true;
 
                 textBoxFocused = true;
 
-                placeholderText.GetComponent<UnityEngine.UI.Text>().material = panel.transform.Find("Text").GetComponent<UnityEngine.UI.Text>().material;
+                input.GetComponent<UnityEngine.UI.Text>().material = messages.GetComponent<UnityEngine.UI.Text>().material;
 
             }
             else if (Input.GetKeyDown(KeyCode.Slash) && textBoxFocused && !Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift))
             {
-                GameObject panel = chatbox.transform.Find("Panel").gameObject;
-                GameObject inputFieldObject = panel.transform.Find("InputField").gameObject;
-                GameObject placeholderText = inputFieldObject.transform.Find("Placeholder").gameObject;
-                GameObject GTTOD = GameObject.Find("GTTOD").gameObject;
-                GameObject Player = GameObject.Find("Player").gameObject;
-                GameObject newLineBacking = panel.transform.Find("NewLineBacking").gameObject;
-
-                newLineBacking.SetActive(false);
-                placeholderText.GetComponent<UnityEngine.UI.Text>().text = "Press / to start typing...";
-                placeholderText.GetComponent<UnityEngine.UI.Text>().color = Color.gray;
-                Player.gameObject.GetComponent<ac_CharacterController>().ToggleFreezePlayer(true);
-                GTTOD.gameObject.GetComponent<GameManager>().TimeStopped = false;
+                input.GetComponent<UnityEngine.UI.Text>().text = "Press / to start typing...";
+                input.GetComponent<UnityEngine.UI.Text>().color = Color.gray;
+                FindAnyObjectByType<ac_CharacterController>().ToggleFreezePlayer(false);
+                GameManager.GM.TimeStopped = false;
 
                 textBoxFocused = false;
 
-                placeholderText.GetComponent<UnityEngine.UI.Text>().material = defaultMateral;
+                input.GetComponent<UnityEngine.UI.Text>().material = defaultMateral;
             }
             else if (textBoxFocused)
             {
@@ -125,29 +116,10 @@ namespace Client
             {
                 if (!client.Connected && !connectionFailed)
                 {
-                    connectionFailed = true;
-
-                    string message = "You have been disconnected";
-
-                    message = SplitLine(message, 90, font, 8);
-
-                    GameObject panel = chatbox.transform.Find("Panel").gameObject;
-                    GameObject textObject = panel.transform.Find("Text").gameObject;
-                    string existingText = textObject.transform.GetComponent<UnityEngine.UI.Text>().text;
-
-                    List<string> lines = new List<string>(existingText.Split('\n'));
-                    List<string> messageLines = new List<string>(message.Split('\n'));
-
-                    lines.AddRange(messageLines);
-
-                    if (lines.Count > 10)
-                    {
-                        lines = lines.Skip(lines.Count - 10).ToList();
-                    }
-
-                    string newText = string.Join("\n", lines);
-
-                    textObject.transform.GetComponent<UnityEngine.UI.Text>().text = newText;
+                    input.GetComponent<UnityEngine.UI.Text>().text = "Connection lost";
+                    input.GetComponent<UnityEngine.UI.Text>().material = defaultMateral;
+                    input.GetComponent<UnityEngine.UI.Text>().color = Color.gray;
+                    FindAnyObjectByType<ac_CharacterController>().ToggleFreezePlayer(true);
                 } else
                 {
                     checkForMessages(chatbox);
@@ -157,11 +129,9 @@ namespace Client
             {
                 connect();
 
-                GameObject panel = chatbox.transform.Find("Panel").gameObject;
-                GameObject textObject = panel.transform.Find("Text").gameObject;
                 if (connectionFailed)
                 {
-                    textObject.transform.GetComponent<UnityEngine.UI.Text>().text = "Failed to connect to server";
+                    input.transform.GetComponent<UnityEngine.UI.Text>().text = "Failed to connect to server";
                 }
                 else
                 {
@@ -174,6 +144,12 @@ namespace Client
 
         private GameObject createChatBox()
         {
+            if (bundle != null)
+            {
+                bundle.Unload(false);
+            }
+
+
             Assembly assembly = Assembly.GetExecutingAssembly();
             Stream fontStream = assembly.GetManifestResourceStream("Client.ChakraPetch-Regular.ttf");
 
@@ -188,26 +164,44 @@ namespace Client
 
             File.Delete(tempFontPath);
 
+            Stream spriteStream = assembly.GetManifestResourceStream("Client.chatbox.sprite");
+
+            byte[] spriteData = new byte[spriteStream.Length];
+            spriteStream.Read(spriteData, 0, (int)spriteStream.Length);
+            spriteStream.Close();
+
+            string tempSpritePath = Path.Combine(Application.temporaryCachePath, "chatbox.sprite");
+            File.WriteAllBytes(tempSpritePath, spriteData);
+
+            bundle = AssetBundle.LoadFromFile(tempSpritePath);
+            sprite = bundle.LoadAsset<Sprite>("Chatbox");
+
+            File.Delete(tempSpritePath);
 
             GameObject chatbox = new GameObject("Chatbox");
+            chatbox.AddComponent<RectTransform>();
             chatbox.AddComponent<Canvas>();
             chatbox.AddComponent<UnityEngine.UI.CanvasScaler>();
             chatbox.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+            chatbox.GetComponent<RectTransform>().sizeDelta = new Vector2(300, 150);
+
             chatbox.transform.localScale = new Vector3(1, 1, 1);
             chatbox.transform.localPosition = new Vector3(1, 1, 1);
             chatbox.layer = LayerMask.NameToLayer("UI");
 
             GameObject panel = new GameObject("Panel");
-            panel.transform.SetParent(chatbox.transform);
-            panel.layer = LayerMask.NameToLayer("UI");
-            UnityEngine.UI.Image panelImage = panel.AddComponent<UnityEngine.UI.Image>();
-            panelImage.color = new Color(0, 0, 0, 0.9961f);
 
-            GameObject newLineBacking = new GameObject("NewLineBacking");
-            newLineBacking.transform.SetParent(panel.transform);
-            newLineBacking.layer = LayerMask.NameToLayer("UI");
-            UnityEngine.UI.Image newLineBackingImage = newLineBacking.AddComponent<UnityEngine.UI.Image>();
-            newLineBackingImage.color = new Color(0, 0, 0, 0.9961f);
+            panel.AddComponent<RectTransform>();
+            panel.transform.SetParent(chatbox.transform);
+            panel.GetComponent<RectTransform>().sizeDelta = new Vector2(300, 200);
+            panel.layer = LayerMask.NameToLayer("UI");
+            panel.AddComponent<UnityEngine.UI.Image>();
+            panel.GetComponent<UnityEngine.UI.Image>().sprite = sprite;
+
+            UnityEngine.UI.Image imageComponent = panel.GetComponent<UnityEngine.UI.Image>();
+            Color currentColor = imageComponent.color;
+            currentColor.a = 0.9961f;
+            imageComponent.color = currentColor;
 
             GameObject textObject = new GameObject("Text");
             textObject.transform.SetParent(panel.transform);
@@ -222,8 +216,8 @@ namespace Client
 
             defaultMateral = textComponent.material;
 
-            textComponent.material = GameObject.Find("PlayerHUD").transform.Find("BigTextGroup").transform.Find("BigText").GetComponent<UnityEngine.UI.Text>().material;
-
+            textComponent.material = hud.transform.GetChild(6).GetChild(3).gameObject.GetComponent<UnityEngine.UI.Text>().material;
+            this.messages = textObject;
 
             GameObject inputFieldObject = new GameObject("InputField");
             inputFieldObject.transform.SetParent(panel.transform);
@@ -252,6 +246,7 @@ namespace Client
             placeholderText.fontSize = 80;
             placeholderText.verticalOverflow = VerticalWrapMode.Overflow;
             placeholderText.horizontalOverflow = HorizontalWrapMode.Overflow;
+            this.input = placeholderTextObject;
 
             return chatbox;
         }
@@ -303,11 +298,9 @@ namespace Client
                 string message = System.Text.Encoding.UTF8.GetString(buffer, 0, bytesRead);
                 Logger.LogInfo($"Received message: {message}");
 
-                message = SplitLine(message, 90, font, 8);
+                message = SplitLine(message, 165, font, 8);
 
-                GameObject panel = chatbox.transform.Find("Panel").gameObject;
-                GameObject textObject = panel.transform.Find("Text").gameObject;
-                string existingText = textObject.transform.GetComponent<UnityEngine.UI.Text>().text;
+                string existingText = messages.transform.GetComponent<UnityEngine.UI.Text>().text;
 
                 List<string> lines = new List<string>(existingText.Split('\n'));
                 List<string> messageLines = new List<string>(message.Split('\n'));
@@ -321,7 +314,7 @@ namespace Client
 
                 string newText = string.Join("\n", lines);
 
-                textObject.transform.GetComponent<UnityEngine.UI.Text>().text = newText;
+                messages.transform.GetComponent<UnityEngine.UI.Text>().text = newText;
 
             }
         }
@@ -439,22 +432,13 @@ namespace Client
         }
         public void processKeys()
         {
-            GameObject chatbox = GameObject.Find("Chatbox");
-            GameObject panel = chatbox.transform.Find("Panel").gameObject;
-            GameObject inputFieldObject = panel.transform.Find("InputField").gameObject;
-            GameObject placeholderText = inputFieldObject.transform.Find("Placeholder").gameObject;
-            GameObject newLineBacking = panel.transform.Find("NewLineBacking").gameObject;
-
-
-            GameObject GTTOD = GameObject.Find("GTTOD").gameObject;
-            GameObject Player = GameObject.Find("Player").gameObject;
             if (Input.GetKeyDown(KeyCode.Return))
             {
 
-                placeholderText.GetComponent<UnityEngine.UI.Text>().text = placeholderText.GetComponent<UnityEngine.UI.Text>().text.Replace(" |", "");
-                if (placeholderText.GetComponent<UnityEngine.UI.Text>().text != "")
+                input.GetComponent<UnityEngine.UI.Text>().text = input.GetComponent<UnityEngine.UI.Text>().text.Replace(" |", "");
+                if (input.GetComponent<UnityEngine.UI.Text>().text != "")
                 {
-                    string message = $"{username}: {placeholderText.GetComponent<UnityEngine.UI.Text>().text}";
+                    string message = $"{username}: {input.GetComponent<UnityEngine.UI.Text>().text}";
                     message = message.Replace(" \n", " ");
                     message = message.Replace("\n", " ");
 
@@ -463,47 +447,28 @@ namespace Client
                     stream.FlushAsync();
                 }
 
-                placeholderText.GetComponent<UnityEngine.UI.Text>().text = "Press / to start typing..."; // Restore the placeholder text
-                placeholderText.GetComponent<UnityEngine.UI.Text>().color = Color.gray;
-                Player.gameObject.GetComponent<ac_CharacterController>().ToggleFreezePlayer(true);
-                GTTOD.gameObject.GetComponent<GameManager>().TimeStopped = false;
-                newLineBacking.SetActive(false);
+                input.GetComponent<UnityEngine.UI.Text>().text = "Press / to start typing...";
+                input.GetComponent<UnityEngine.UI.Text>().color = Color.gray;
+                FindAnyObjectByType<ac_CharacterController>().ToggleFreezePlayer(true);
+                GameManager.GM.TimeStopped = false;
                 textBoxFocused = false;
 
-                placeholderText.GetComponent<UnityEngine.UI.Text>().material = defaultMateral;
+                input.GetComponent<UnityEngine.UI.Text>().material = defaultMateral;
             }
 
 
             if (Input.GetKeyDown(KeyCode.Backspace))
             {
-                placeholderText.GetComponent<UnityEngine.UI.Text>().text = placeholderText.GetComponent<UnityEngine.UI.Text>().text.Replace(" |", "");
-                string currentText = placeholderText.GetComponent<UnityEngine.UI.Text>().text;
+                input.GetComponent<UnityEngine.UI.Text>().text = input.GetComponent<UnityEngine.UI.Text>().text.Replace(" |", "");
+                string currentText = input.GetComponent<UnityEngine.UI.Text>().text;
                 if (currentText.Length > 0)
                 {
-                    placeholderText.GetComponent<UnityEngine.UI.Text>().text = currentText.Substring(0, currentText.Length - 1);
+                    input.GetComponent<UnityEngine.UI.Text>().text = currentText.Substring(0, currentText.Length - 1);
 
-                    placeholderText.GetComponent<UnityEngine.UI.Text>().text += " |";
-                }
-
-                string[] lines = placeholderText.GetComponent<UnityEngine.UI.Text>().text.Split('\n');
-
-                if (lines.Length < 2)
-                {
-                    newLineBacking.SetActive(false);
-                }
-                else
-                {
-                    newLineBacking.SetActive(true);
+                        input.GetComponent<UnityEngine.UI.Text>().text += " |";
                 }
 
-                if (lines.Length < 3)
-                {
-                    newLineBacking.transform.localScale = new Vector3(1, .1f, 1);
-                }
-                else
-                {
-                    newLineBacking.transform.localScale = new Vector3(1, .3f, 1);
-                }
+                string[] lines = input.GetComponent<UnityEngine.UI.Text>().text.Split('\n');
             }
 
             if (Input.anyKeyDown)
@@ -626,36 +591,19 @@ namespace Client
                             keyString = keyString.ToLower();
                         }
 
-                        placeholderText.GetComponent<UnityEngine.UI.Text>().text = placeholderText.GetComponent<UnityEngine.UI.Text>().text.Replace(" |", "");
+                        input.GetComponent<UnityEngine.UI.Text>().text = input.GetComponent<UnityEngine.UI.Text>().text.Replace(" |", "");
 
-                        string newText = placeholderText.GetComponent<UnityEngine.UI.Text>().text + keyString;
+                        string newText = input.GetComponent<UnityEngine.UI.Text>().text + keyString;
 
-                        newText = SplitLine(newText, 90, font, 8);
+                        newText = SplitLine(newText, 165, font, 8);
 
                         string[] lines = newText.Split('\n');
 
-                        if (lines.Length < 2)
-                        {
-                            newLineBacking.SetActive(false);
-                        }
-                        else
-                        {
-                            newLineBacking.SetActive(true);
-                        }
-
                         if (lines.Length < 3)
-                        {
-                            newLineBacking.transform.localScale = new Vector3(1, .1f, 1);
-                        } else
-                        {
-                            newLineBacking.transform.localScale = new Vector3(1, .3f, 1);
-                        }
-
-                        if (lines.Length < 4)
                         {
                             newText += " |";
 
-                            placeholderText.GetComponent<UnityEngine.UI.Text>().text = newText;
+                            input.GetComponent<UnityEngine.UI.Text>().text = newText;
                         }
                         break;
                     }

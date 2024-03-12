@@ -23,7 +23,7 @@ namespace Server
         private List<TcpClient> clients = new List<TcpClient>();
         private List<TcpClient> clientsMarkedForDeletion = new List<TcpClient>();
 
-        private string currentVersion = "1.0.1";
+        private string currentVersion = "1.1.0";
 
         public async Task Start(string[] args)
         {
@@ -69,7 +69,7 @@ namespace Server
 
                     List<string> messageParts = new List<string>(message.Split('~'));
 
-                    if (messageParts[0] != "1.0.1" && messageParts[0] != "1.0.0")
+                    if (messageParts[0] != "1.0.1" && messageParts[0] != "1.0.0" && messageParts[0] != "1.1.0")
                     {
                         string reply = "System: The plugin is outdated, please update";
                         byte[] replyBuffer = Encoding.UTF8.GetBytes(reply);
@@ -83,6 +83,15 @@ namespace Server
                         return;
                     } else
                     {
+                        if (messageParts[0] != currentVersion)
+                        {
+                            string reply = "System: A new version is available!";
+                            byte[] replyBuffer = Encoding.UTF8.GetBytes(reply);
+                            stream.Write(replyBuffer, 0, replyBuffer.Length);
+                            stream.Flush();
+                            client.Close();
+                        }
+
                         SendMessage(messageParts[1]);
                     }
                 }
