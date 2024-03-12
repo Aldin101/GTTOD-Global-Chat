@@ -71,7 +71,7 @@ namespace Server
                     {
                         if (messageParts[0] == "1.0.0" || messageParts[0] == "1.0.1")
                         {
-                            if (!messageParts[1].Contains(":")
+                            if (!messageParts[1].Contains(':'))
                             {
                                 string reply = "System: The plugin is outdated, please update\n";
                                 byte[] replyBuffer = Encoding.UTF8.GetBytes(reply);
