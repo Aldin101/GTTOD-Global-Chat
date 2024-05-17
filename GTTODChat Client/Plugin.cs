@@ -118,7 +118,18 @@ namespace Client
 
             if (connectionAttempted)
             {
-                if (!client.Connected && !connectionFailed)
+                if (client == null)
+                {
+                    if (input.GetComponent<UnityEngine.UI.Text>().text == "Connection lost" || input.GetComponent<UnityEngine.UI.Text>().text == "Failed to connect to server") return;
+
+                    input.GetComponent<UnityEngine.UI.Text>().text = "Connection lost";
+                    input.GetComponent<UnityEngine.UI.Text>().material = defaultMateral;
+                    input.GetComponent<UnityEngine.UI.Text>().color = Color.gray;
+                    FindAnyObjectByType<ac_CharacterController>().ToggleFreezePlayer(true);
+                    return;
+                }
+
+                if (!client.Connected && connectionFailed)
                 {
                     if (input.GetComponent<UnityEngine.UI.Text>().text == "Connection lost") return;
 
