@@ -3,8 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net46</TargetFramework>
     <AssemblyName>GlobalChat</AssemblyName>
-    <Description>Feeling nostolgic? This plugin brings back the ingame chat, just like old times!</Description>
-    <Version>1.1.0</Version>
+    <Description>Feeling nostalgic? This plugin brings back the ingame chat, just like old times!</Description>
+    <Version>1.1.1</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>

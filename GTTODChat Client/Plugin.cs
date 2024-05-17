@@ -37,7 +37,7 @@ namespace Client
 
         private void Awake()
         {
-            Logger.LogInfo($"{PluginInfo.PLUGIN_NAME} V{PluginInfo.PLUGIN_VERSION} has loaded");
+            Logger.LogInfo($"{PluginInfo.PLUGIN_NAME} v{PluginInfo.PLUGIN_VERSION} has loaded");
 
             username = getSteamUsername();
         }
@@ -46,6 +46,10 @@ namespace Client
         {
             if (client != null)
             {
+                byte[] buffer = System.Text.Encoding.UTF8.GetBytes($"{PluginInfo.PLUGIN_VERSION}~{username} disconnected");
+                stream.Write(buffer, 0, buffer.Length);
+                stream.Flush();
+
                 client.Close();
             }
             GameObject.Destroy(chatbox);
@@ -100,7 +104,7 @@ namespace Client
             {
                 input.GetComponent<UnityEngine.UI.Text>().text = "Press / to start typing...";
                 input.GetComponent<UnityEngine.UI.Text>().color = Color.gray;
-                FindAnyObjectByType<ac_CharacterController>().ToggleFreezePlayer(false);
+                FindAnyObjectByType<ac_CharacterController>().ToggleFreezePlayer(true);
                 GameManager.GM.TimeStopped = false;
 
                 textBoxFocused = false;
@@ -309,9 +313,9 @@ namespace Client
 
                 lines.AddRange(messageLines);
 
-                if (lines.Count > 10)
+                if (lines.Count > 11)
                 {
-                    lines = lines.Skip(lines.Count - 10).ToList();
+                    lines = lines.Skip(lines.Count - 11).ToList();
                 }
 
                 string newText = string.Join("\n", lines);

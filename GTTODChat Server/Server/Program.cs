@@ -67,9 +67,9 @@ namespace Server
 
                     List<string> messageParts = new List<string>(message.Split('~'));
 
-                    if (messageParts[0] != "1.1.0")
+                    if (messageParts[0] != "1.1.1")
                     {
-                        if (messageParts[0] == "1.0.0" || messageParts[0] == "1.0.1")
+                        if (messageParts[0] == "1.0.0" || messageParts[0] == "1.0.1" || messageParts[0] == "1.1.0")
                         {
                             if (!messageParts[1].Contains(':'))
                             {
