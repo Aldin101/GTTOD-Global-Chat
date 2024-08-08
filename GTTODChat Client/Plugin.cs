@@ -9,6 +9,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.UIElements;
 using BepInEx;
+using Steamworks;
 
 namespace Client
 {
@@ -38,13 +39,16 @@ namespace Client
         private void Awake()
         {
             Logger.LogInfo($"{PluginInfo.PLUGIN_NAME} v{PluginInfo.PLUGIN_VERSION} has loaded");
+        }
 
+        private void Start()
+        {
             username = getSteamUsername();
         }
 
         private void OnDestroy()
         {
-            if (client != null)
+            if (client != null && username != null)
             {
                 byte[] buffer = System.Text.Encoding.UTF8.GetBytes($"{PluginInfo.PLUGIN_VERSION}~{username} disconnected");
                 stream.Write(buffer, 0, buffer.Length);
@@ -84,7 +88,7 @@ namespace Client
                 inputFieldObject.transform.localScale = new Vector3(.15f, .15f, 1);
             }
 
-            if (Input.GetKeyDown(KeyCode.Slash) && !connectionFailed && !textBoxFocused)
+            if (Input.GetKeyDown(KeyCode.Slash) && !connectionFailed && !textBoxFocused && username != null)
             {
                 GameObject panel = chatbox.transform.GetChild(0).gameObject;
                 GameObject inputFieldObject = panel.transform.GetChild(1).gameObject;
@@ -141,6 +145,14 @@ namespace Client
                 {
                     checkForMessages(chatbox);
                 }
+
+                if (username == null)
+                {
+                    input.GetComponent<UnityEngine.UI.Text>().text = "Unable to get username, you can still read\nmessages though.";
+                    input.GetComponent<UnityEngine.UI.Text>().material = defaultMateral;
+                    input.GetComponent<UnityEngine.UI.Text>().color = Color.gray;
+                    return;
+                }
             }
             else
             {
@@ -150,7 +162,7 @@ namespace Client
                 {
                     input.transform.GetComponent<UnityEngine.UI.Text>().text = "Failed to connect to server";
                 }
-                else
+                else if (username != null)
                 {
                     byte[] buffer = System.Text.Encoding.UTF8.GetBytes($"{PluginInfo.PLUGIN_VERSION}~{username} connected");
                     stream.Write(buffer, 0, buffer.Length);
@@ -271,19 +283,25 @@ namespace Client
 
         private string getSteamUsername()
         {
-            string keyName = @"SOFTWARE\Valve\Steam";
-            using (RegistryKey key = Registry.CurrentUser.OpenSubKey(keyName))
+            if (!SteamManager.Initialized)
             {
-                if (key != null)
+                string keyName = @"SOFTWARE\Valve\Steam";
+                using (RegistryKey key = Registry.CurrentUser.OpenSubKey(keyName))
                 {
-                    object lastGameNameUsed = key.GetValue("LastGameNameUsed");
-                    if (lastGameNameUsed != null)
+                    if (key != null)
                     {
-                        return lastGameNameUsed.ToString();
+                        object lastGameNameUsed = key.GetValue("LastGameNameUsed");
+                        if (lastGameNameUsed != null)
+                        {
+                            return lastGameNameUsed.ToString();
+                        }
                     }
                 }
+                return null;
+            } else
+            {
+                return SteamFriends.GetPersonaName();
             }
-            return null;
         }
 
         private void connect()

@@ -4,7 +4,7 @@
     <TargetFramework>net46</TargetFramework>
     <AssemblyName>GlobalChat</AssemblyName>
     <Description>Feeling nostalgic? This plugin brings back the ingame chat, just like old times!</Description>
-    <Version>1.1.1</Version>
+    <Version>1.1.2</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
@@ -26,6 +26,9 @@
   </ItemGroup>
 
     <ItemGroup>
+	    <Reference Include="netstandard">
+	      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Get To The Orange Door\Get To The Orange Door_Data\Managed\netstandard.dll</HintPath>
+	    </Reference>
 	    <Reference Include="UnityEngine.UI">
 		    <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Get To The Orange Door\Get To The Orange Door_Data\Managed\UnityEngine.UI.dll</HintPath>
 	    </Reference>
@@ -34,6 +37,9 @@
 	<ItemGroup>
 		<Reference Include="GTTOD">
 			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Get To The Orange Door\Get To The Orange Door_Data\Managed\Assembly-CSharp.dll</HintPath>
+		</Reference>
+		<Reference Include="Steamworks">
+			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Get To The Orange Door\Get To The Orange Door_Data\Managed\com.rlabrecque.steamworks.net.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 </Project>
