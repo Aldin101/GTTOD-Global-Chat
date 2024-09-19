@@ -308,7 +308,7 @@ namespace Client
         {
             try
             {
-                client = new TcpClient("192.9.134.179", 80);
+                client = new TcpClient("gttodglobalchat.aldin101.dev", 5252);
                 stream = client.GetStream();
             }
             catch

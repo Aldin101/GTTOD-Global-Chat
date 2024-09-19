@@ -25,7 +25,7 @@ namespace Server
 
         public async Task Start(string[] args)
         {
-            server = new TcpListener(IPAddress.Any, 80);
+            server = new TcpListener(IPAddress.Any, 5252);
             server.Start();
             Console.WriteLine("Server has started");
             await AcceptClients();
@@ -67,9 +67,9 @@ namespace Server
 
                     List<string> messageParts = new List<string>(message.Split('~'));
 
-                    if (messageParts[0] != "1.1.2")
+                    if (messageParts[0] != "2.0.0")
                     {
-                        if (messageParts[0] == "1.0.0" || messageParts[0] == "1.0.1" || messageParts[0] == "1.1.0" || messageParts[0] == "1.1.1")
+                        if (false)
                         {
                             if (!messageParts[1].Contains(':'))
                             {
