@@ -10,6 +10,7 @@ using UnityEngine.UI;
 using UnityEngine.UIElements;
 using BepInEx;
 using Steamworks;
+using System.Net;
 
 namespace Client
 {
@@ -308,16 +309,25 @@ namespace Client
         {
             try
             {
-                client = new TcpClient("gttodglobalchat.aldin101.dev", 5252);
+                var addresses = Dns.GetHostAddresses("gttodglobalchat.aldin101.dev");
+                if (addresses.Length == 0)
+                {
+                    throw new Exception("No IP addresses found for the specified host.");
+                }
+
+                var ipAddress = addresses[0];
+                client = new TcpClient();
+                client.Connect(ipAddress, 5252);
                 stream = client.GetStream();
             }
-            catch
+            catch (Exception ex)
             {
                 connectionFailed = true;
-                Logger.LogInfo("Failed to connect to server");
+                Logger.LogInfo($"Failed to connect to server: {ex.Message}");
             }
             connectionAttempted = true;
         }
+
 
         private void checkForMessages(GameObject chatbox)
         {
